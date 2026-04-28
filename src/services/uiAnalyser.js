@@ -12,7 +12,7 @@ async function analyseWebsite(websiteUrl) {
 
   try {
     log(`Launching browser for: ${websiteUrl}`);
-    browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+    browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
     const page = await browser.newPage();
 
     // Single desktop viewport, above-the-fold only
