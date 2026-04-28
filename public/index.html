@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadLens — Find leads. Fix websites.</title>
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --surface: #161a20;
+      --surface-2: #1e242c;
+      --surface-3: #252c36;
+      --border: #2a3140;
+      --border-active: #3d4f6b;
+      --accent: #4a9eff;
+      --accent-dim: #1a3a5c;
+      --text: #e0e8f0;
+      --text-muted: #6b7a8d;
+      --text-dim: #3d4f6b;
+      --green: #3ddc84;
+      --amber: #ffb347;
+      --red: #ff5c5c;
+      --high: #ff5c5c;
+      --medium: #ffb347;
+      --low: #3ddc84;
+      --font: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --radius: 6px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* ---- Header ---- */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .wordmark {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+
+    .wordmark span { color: var(--text-muted); }
+
+    .tagline {
+      color: var(--text-muted);
+      font-size: 12px;
+      border-left: 1px solid var(--border);
+      padding-left: 16px;
+    }
+
+    /* ---- Layout ---- */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    /* ---- Search Panel ---- */
+    .search-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .search-panel h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    input::placeholder { color: var(--text-dim); }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+
+    .btn-secondary {
+      background: var(--surface-3);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 11px;
+    }
+
+    /* ---- Results ---- */
+    #results-section { display: none; }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .results-header h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+    }
+
+    .results-count {
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    thead {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+
+    td {
+      padding: 12px 14px;
+      vertical-align: middle;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .td-name { font-weight: 600; max-width: 200px; }
+    .td-name small { display: block; color: var(--text-muted); font-size: 10px; font-weight: 400; margin-top: 2px; }
+
+    .td-link a { color: var(--accent); text-decoration: none; }
+    .td-link a:hover { text-decoration: underline; }
+
+    .social-icons { display: flex; gap: 6px; }
+    .social-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .social-icon:hover { color: var(--accent); border-color: var(--accent); }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 13px;
+      border: 2px solid;
+    }
+
+    .score-badge.green { color: var(--green); border-color: var(--green); }
+    .score-badge.amber { color: var(--amber); border-color: var(--amber); }
+    .score-badge.red { color: var(--red); border-color: var(--red); }
+    .score-badge.none { color: var(--text-dim); border-color: var(--border); }
+
+    /* ---- Skeleton ---- */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+      height: 12px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ---- Modal / Sidebar ---- */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay.open { display: block; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: -680px;
+      width: 660px;
+      max-width: 100vw;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 101;
+      transition: right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.open { right: 0; }
+
+    .sidebar-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .sidebar-title { font-size: 15px; font-weight: 600; }
+    .sidebar-url { font-size: 11px; color: var(--text-muted); margin-top: 4px; word-break: break-all; }
+
+    .close-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .close-btn:hover { color: var(--text); border-color: var(--text); }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* Score hero */
+    .score-hero {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 24px;
+      padding: 20px;
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .score-big {
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .score-big.green { color: var(--green); }
+    .score-big.amber { color: var(--amber); }
+    .score-big.red { color: var(--red); }
+
+    .score-meta { flex: 1; }
+    .score-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); margin-bottom: 6px; }
+    .score-summary { font-size: 13px; color: var(--text); line-height: 1.7; }
+
+    .screenshot-thumb {
+      width: 120px;
+      flex-shrink: 0;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .screenshot-thumb img { width: 100%; display: block; }
+    .screenshot-thumb-placeholder {
+      width: 120px;
+      height: 75px;
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: var(--surface-2);
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      border-right: 1px solid var(--border);
+    }
+
+    .tab-btn:last-child { border-right: none; }
+    .tab-btn.active { background: var(--surface-3); color: var(--accent); }
+    .tab-btn:hover:not(.active) { background: var(--surface-3); color: var(--text); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Issue cards */
+    .issue-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .issue-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .issue-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .severity-badge {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .severity-badge.high { background: rgba(255,92,92,0.15); color: var(--high); }
+    .severity-badge.medium { background: rgba(255,179,71,0.15); color: var(--medium); }
+    .severity-badge.low { background: rgba(61,220,132,0.15); color: var(--low); }
+
+    .issue-area {
+      font-size: 10px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+
+    .issue-text { font-size: 12px; color: var(--text); margin-bottom: 6px; }
+    .issue-fix { font-size: 11px; color: var(--text-muted); }
+    .issue-fix strong { color: var(--green); }
+
+    /* Quick wins */
+    .section-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+
+    .quick-wins { display: flex; flex-direction: column; gap: 8px; }
+
+    .quick-win-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+
+    .quick-win-num {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      min-width: 20px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-dim);
+      padding: 24px;
+      font-size: 12px;
+    }
+
+    /* Spinner */
+    .spinner-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 200;
+    }
+
+    .toast {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      box-shadow: var(--shadow);
+      max-width: 320px;
+      animation: slideIn 0.2s ease;
+    }
+
+    .toast.error { border-left-color: var(--red); }
+    .toast.success { border-left-color: var(--green); }
+
+    @keyframes slideIn {
+      from { transform: translateX(40px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Fullscreen screenshot modal */
+    #screenshot-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+
+    #screenshot-modal.open { display: flex; }
+    #screenshot-modal img { max-width: 90vw; max-height: 90vh; border-radius: var(--radius); box-shadow: var(--shadow); }
+
+    /* No results */
+    .no-results {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .no-results h3 { font-size: 15px; margin-bottom: 8px; }
+    .no-results p { font-size: 12px; color: var(--text-dim); }
+
+    /* Analysing state in row */
+    .analyse-spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 768px) {
+      main { padding: 16px; }
+      .sidebar { width: 100vw; }
+      .score-hero { flex-wrap: wrap; }
+      .screenshot-thumb { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">Lead<span>Lens</span></div>
+  <div class="tagline">Find leads. Fix websites.</div>
+</header>
+
+<main>
+  <!-- Search Panel -->
+  <div class="search-panel">
+    <h2>Business Search</h2>
+    <div class="search-row">
+      <div class="field">
+        <label>Niche / Industry</label>
+        <input type="text" id="niche" placeholder="e.g. joinery, accountants, florists" />
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <input type="text" id="location" placeholder="e.g. London, E10 1AB, Manchester" />
+      </div>
+      <button class="btn btn-primary" id="search-btn" onclick="runSearch()">Find Leads</button>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div id="results-section">
+    <div class="results-header">
+      <div>
+        <h2>Results <span class="results-count" id="results-count"></span></h2>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="exportCsv()">Export CSV</button>
+    </div>
+
+    <div id="results-container"></div>
+  </div>
+</main>
+
+<!-- Analysis Sidebar -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div>
+      <div class="sidebar-title" id="sidebar-title">Website Analysis</div>
+      <div class="sidebar-url" id="sidebar-url"></div>
+    </div>
+    <button class="close-btn" onclick="closeSidebar()">×</button>
+  </div>
+  <div class="sidebar-body" id="sidebar-body"></div>
+</div>
+
+<!-- Screenshot modal -->
+<div id="screenshot-modal" onclick="closeScreenshotModal()">
+  <img id="screenshot-modal-img" src="" alt="Full screenshot" />
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+  // ---- State ----
+  let currentResults = [];
+  let currentSearchResults = null;
+
+  // ---- Toast ----
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }
+
+  // ---- Search ----
+  async function runSearch() {
+    const niche = document.getElementById('niche').value.trim();
+    const location = document.getElementById('location').value.trim();
+
+    if (!niche || !location) {
+      toast('Please enter both a niche and a location.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('search-btn');
+    btn.disabled = true;
+    btn.textContent = 'Searching…';
+
+    document.getElementById('results-section').style.display = 'block';
+    document.getElementById('results-count').textContent = '';
+    document.getElementById('results-container').innerHTML = renderSkeletonRows(8);
+
+    try {
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ niche, location }),
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+
+      currentResults = data.results || [];
+
+      if (!currentResults.length) {
+        document.getElementById('results-count').textContent = '';
+        document.getElementById('results-container').innerHTML = `
+          <div class="no-results">
+            <h3>No results found</h3>
+            <p>${data.message || 'Try a different niche or location.'}</p>
+          </div>`;
+        return;
+      }
+
+      document.getElementById('results-count').textContent = `(${currentResults.length})`;
+      renderTable(currentResults);
+      toast(`Found ${currentResults.length} businesses.`, 'success');
+    } catch (err) {
+      document.getElementById('results-container').innerHTML = `
+        <div class="no-results">
+          <h3>Search failed</h3>
+          <p>${err.message}</p>
+        </div>`;
+      toast(`Search failed: ${err.message}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Find Leads';
+    }
+  }
+
+  // ---- Table ----
+  function renderTable(results) {
+    const html = `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Owner / Director</th>
+              <th>Email</th>
+              <th>Website</th>
+              <th>Social</th>
+              <th>Score</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            ${results.map(renderRow).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    document.getElementById('results-container').innerHTML = html;
+  }
+
+  function renderRow(r) {
+    const scoreHtml = r.uiAnalysis
+      ? `<span class="score-badge ${scoreClass(r.uiAnalysis.overallScore)}">${r.uiAnalysis.overallScore}</span>`
+      : `<span class="score-badge none">—</span>`;
+
+    return `
+      <tr id="row-${r.id}">
+        <td class="td-name">
+          ${escHtml(r.name)}
+          <small>${escHtml(r.address || '')}</small>
+        </td>
+        <td>${escHtml(r.ownerName || '—')}</td>
+        <td class="td-link">${r.email ? `<a href="mailto:${escHtml(r.email)}">${escHtml(r.email)}</a>` : '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td class="td-link">${r.website ? `<a href="${escHtml(r.website)}" target="_blank" rel="noopener">${shortenUrl(r.website)}</a>` : '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td><div class="social-icons">${renderSocialIcons(r.socialLinks)}</div></td>
+        <td id="score-${r.id}">${scoreHtml}</td>
+        <td id="action-${r.id}">
+          ${r.website
+            ? `<button class="btn btn-secondary btn-sm" onclick="analyseWebsite('${r.id}', '${escHtml(r.website)}', '${escHtml(r.name)}')">Analyse</button>`
+            : '<span style="color:var(--text-dim);font-size:11px">No URL</span>'}
+        </td>
+      </tr>`;
+  }
+
+  function renderSocialIcons(links) {
+    if (!links) return '';
+    const icons = {
+      linkedin: ['LI', '#0a66c2'],
+      facebook: ['FB', '#1877f2'],
+      instagram: ['IG', '#e4405f'],
+      twitter: ['X', '#1da1f2'],
+      tiktok: ['TT', '#010101'],
+    };
+    return Object.entries(icons)
+      .map(([key, [label]]) =>
+        links[key]
+          ? `<a href="${escHtml(links[key])}" target="_blank" rel="noopener" class="social-icon" title="${key}">${label}</a>`
+          : ''
+      )
+      .join('');
+  }
+
+  function renderSkeletonRows(n) {
+    return `<div class="table-wrap"><table>
+      <thead><tr>
+        <th>Company</th><th>Owner / Director</th><th>Email</th><th>Website</th><th>Social</th><th>Score</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${Array.from({ length: n }, () => `
+        <tr>
+          ${Array.from({ length: 7 }, () => `<td><div class="skeleton" style="width:${60 + Math.random()*30}%"></div></td>`).join('')}
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  // ---- Analyse ----
+  async function analyseWebsite(companyId, websiteUrl, companyName) {
+    const actionCell = document.getElementById(`action-${companyId}`);
+    const scoreCell = document.getElementById(`score-${companyId}`);
+
+    if (actionCell) actionCell.innerHTML = `<span class="analyse-spinner"></span> Analysing…`;
+    if (scoreCell) scoreCell.innerHTML = `<span class="analyse-spinner"></span>`;
+
+    try {
+      const res = await fetch('/api/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ websiteUrl, companyId }),
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+
+      // Update in-memory results
+      const idx = currentResults.findIndex((r) => r.id === companyId);
+      if (idx !== -1) currentResults[idx].uiAnalysis = data.analysis;
+
+      // Update score badge
+      const score = data.analysis?.overallScore ?? 0;
+      if (scoreCell) scoreCell.innerHTML = `<span class="score-badge ${scoreClass(score)}">${score || '!'}</span>`;
+
+      // Restore analyse button
+      if (actionCell) {
+        actionCell.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="openSidebar('${companyId}', '${escHtml(websiteUrl)}', '${escHtml(companyName)}')">View Report</button>`;
+      }
+
+      // Open sidebar
+      openSidebarWithData(companyId, websiteUrl, companyName, data);
+    } catch (err) {
+      if (actionCell) actionCell.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="analyseWebsite('${companyId}', '${escHtml(websiteUrl)}', '${escHtml(companyName)}')">Retry</button>`;
+      if (scoreCell) scoreCell.innerHTML = `<span class="score-badge none">!</span>`;
+      toast(`Analysis failed: ${err.message}`, 'error');
+    }
+  }
+
+  // Re-open sidebar for already-analysed company
+  function openSidebar(companyId, websiteUrl, companyName) {
+    const result = currentResults.find((r) => r.id === companyId);
+    if (!result || !result.uiAnalysis) return;
+    openSidebarWithData(companyId, websiteUrl, companyName, { analysis: result.uiAnalysis, screenshot: result._screenshot });
+  }
+
+  function openSidebarWithData(companyId, websiteUrl, companyName, data) {
+    // Cache screenshot on result object
+    const idx = currentResults.findIndex((r) => r.id === companyId);
+    if (idx !== -1 && data.screenshot) currentResults[idx]._screenshot = data.screenshot;
+
+    document.getElementById('sidebar-title').textContent = companyName || 'Website Analysis';
+    document.getElementById('sidebar-url').textContent = websiteUrl;
+
+    const body = document.getElementById('sidebar-body');
+    body.innerHTML = renderAnalysis(data);
+
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('sidebar').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('sidebar').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function renderAnalysis(data) {
+    if (!data || !data.analysis) return '<div class="empty-state">No analysis data.</div>';
+
+    const a = data.analysis;
+    const sc = scoreClass(a.overallScore);
+
+    const screenshotHtml = data.screenshot
+      ? `<div class="screenshot-thumb" onclick="openScreenshotModal('${data.screenshot}')">
+           <img src="data:image/jpeg;base64,${data.screenshot}" alt="Website screenshot" />
+         </div>`
+      : `<div class="screenshot-thumb-placeholder">No screenshot</div>`;
+
+    return `
+      <div class="score-hero">
+        <div class="score-big ${sc}">${a.overallScore || '0'}</div>
+        <div class="score-meta">
+          <div class="score-label">Overall Score (1–10)</div>
+          <div class="score-summary">${escHtml(a.summary || '')}</div>
+        </div>
+        ${screenshotHtml}
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this, 'ui-tab')">UI Issues (${(a.uiIssues || []).length})</button>
+        <button class="tab-btn" onclick="switchTab(this, 'cro-tab')">CRO Issues (${(a.croIssues || []).length})</button>
+      </div>
+
+      <div id="ui-tab" class="tab-panel active">
+        ${renderIssueList(a.uiIssues)}
+      </div>
+
+      <div id="cro-tab" class="tab-panel">
+        ${renderIssueList(a.croIssues)}
+      </div>
+
+      <div class="section-label">Quick Wins</div>
+      <div class="quick-wins">
+        ${(a.quickWins || []).length
+          ? a.quickWins.map((w, i) => `
+              <div class="quick-win-item">
+                <span class="quick-win-num">${i + 1}</span>
+                <span>${escHtml(w)}</span>
+              </div>`).join('')
+          : '<div class="empty-state">No quick wins identified.</div>'}
+      </div>`;
+  }
+
+  function renderIssueList(issues) {
+    if (!issues || !issues.length) return '<div class="empty-state">No issues found.</div>';
+    return `<div class="issue-list">${issues.map((issue) => `
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <span class="severity-badge ${issue.severity || 'low'}">${issue.severity || 'low'}</span>
+          <span class="issue-area">${escHtml(issue.area || '')}</span>
+        </div>
+        <div class="issue-text">${escHtml(issue.issue || '')}</div>
+        <div class="issue-fix"><strong>Fix:</strong> ${escHtml(issue.fix || '')}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  function switchTab(btn, tabId) {
+    btn.closest('.tabs').querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = btn.closest('.sidebar-body') || document.body;
+    panel.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+  }
+
+  // ---- Screenshot modal ----
+  function openScreenshotModal(base64) {
+    document.getElementById('screenshot-modal-img').src = `data:image/jpeg;base64,${base64}`;
+    document.getElementById('screenshot-modal').classList.add('open');
+  }
+
+  function closeScreenshotModal() {
+    document.getElementById('screenshot-modal').classList.remove('open');
+  }
+
+  // ---- CSV Export ----
+  async function exportCsv() {
+    if (!currentResults.length) {
+      toast('No results to export.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ results: currentResults }),
+      });
+
+      if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'leadlens-export.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('CSV exported.', 'success');
+    } catch (err) {
+      toast(`Export failed: ${err.message}`, 'error');
+    }
+  }
+
+  // ---- Helpers ----
+  function scoreClass(score) {
+    if (!score || score < 5) return 'red';
+    if (score < 7.5) return 'amber';
+    return 'green';
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function shortenUrl(url) {
+    try {
+      const u = new URL(url);
+      return u.hostname.replace(/^www\./, '');
+    } catch {
+      return url;
+    }
+  }
+
+  // ---- Keyboard shortcuts ----
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeSidebar();
+      closeScreenshotModal();
+    }
+    if (e.key === 'Enter' && (e.target.id === 'niche' || e.target.id === 'location')) {
+      runSearch();
+    }
+  });
+</script>
+</body>
+</html>
