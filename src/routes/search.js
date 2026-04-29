@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
     res.json({ results });
   } catch (err) {
     log(`Search error: ${err.message}`);
-    res.status(500).json({ error: 'Search failed. Please try again.' });
+    res.status(500).json({ error: err.message || 'Search failed. Please try again.' });
   }
 });
 

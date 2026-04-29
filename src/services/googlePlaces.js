@@ -2,9 +2,21 @@ const axios = require('axios');
 
 const BASE_URL = 'https://maps.googleapis.com/maps/api/place';
 const USER_AGENT = 'LeadLens/1.0 (local research tool)';
+const MAX_RESULTS = 50;
 
 function log(msg) {
   console.log(`[${new Date().toISOString()}] [GooglePlaces] ${msg}`);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function assertValidPlacesResponse(data) {
+  if (data.status && data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+    const message = data.error_message || `Google Places returned ${data.status}`;
+    throw new Error(message);
+  }
 }
 
 async function searchBusinesses(niche, location) {
@@ -18,13 +30,7 @@ async function searchBusinesses(niche, location) {
   log(`Searching: "${query}"`);
 
   try {
-    const searchRes = await axios.get(`${BASE_URL}/textsearch/json`, {
-      params: { query, key: apiKey },
-      headers: { 'User-Agent': USER_AGENT },
-      timeout: 10000,
-    });
-
-    const places = (searchRes.data.results || []).slice(0, 20);
+    const places = await getTextSearchResults(query, apiKey, MAX_RESULTS);
     log(`Found ${places.length} places`);
 
     const businesses = await Promise.all(
@@ -43,8 +49,33 @@ async function searchBusinesses(niche, location) {
     return businesses;
   } catch (err) {
     log(`Search error: ${err.message}`);
-    return [];
+    throw err;
   }
+}
+
+async function getTextSearchResults(query, apiKey, limit) {
+  const places = [];
+  let pageToken = null;
+
+  while (places.length < limit) {
+    if (pageToken) {
+      await delay(2000);
+    }
+
+    const searchRes = await axios.get(`${BASE_URL}/textsearch/json`, {
+      params: pageToken ? { pagetoken: pageToken, key: apiKey } : { query, key: apiKey },
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 10000,
+    });
+
+    assertValidPlacesResponse(searchRes.data);
+    places.push(...(searchRes.data.results || []));
+
+    pageToken = searchRes.data.next_page_token;
+    if (!pageToken || searchRes.data.status === 'ZERO_RESULTS') break;
+  }
+
+  return places.slice(0, limit);
 }
 
 async function getPlaceDetails(placeId, apiKey) {

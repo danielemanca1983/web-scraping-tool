@@ -71,7 +71,7 @@ Obtain from: [Anthropic Console](https://console.anthropic.com/settings/keys)
 
 - **Website analysis**: Puppeteer requires a compatible Chromium installation. On some cloud/CI environments you may need to install Chromium dependencies separately or set the `PUPPETEER_EXECUTABLE_PATH` environment variable.
 
-- **Rate limits**: Google Places API charges per request after the free tier. Running large searches (20 results × 2 API calls each) will consume quota quickly.
+- **Rate limits**: Google Places API charges per request after the free tier. Running large searches (50 results plus detail lookups) will consume quota quickly.
 
 ---
 

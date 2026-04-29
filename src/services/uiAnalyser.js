@@ -7,6 +7,23 @@ function log(msg) {
   console.log(`[${new Date().toISOString()}] [UIAnalyser] ${msg}`);
 }
 
+function parseAnalysisResponse(raw) {
+  const trimmed = raw.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  const jsonText = fenced ? fenced[1].trim() : trimmed;
+
+  try {
+    return JSON.parse(jsonText);
+  } catch (err) {
+    const start = jsonText.indexOf('{');
+    const end = jsonText.lastIndexOf('}');
+    if (start !== -1 && end > start) {
+      return JSON.parse(jsonText.slice(start, end + 1));
+    }
+    throw err;
+  }
+}
+
 async function analyseWebsite(websiteUrl) {
   let browser;
 
@@ -64,7 +81,7 @@ async function analyseWebsite(websiteUrl) {
     const raw = response.content.find((b) => b.type === 'text')?.text ?? '{}';
     log(`Claude response received for ${websiteUrl}`);
 
-    const analysis = JSON.parse(raw);
+    const analysis = parseAnalysisResponse(raw);
     return { analysis, screenshot: base64 };
   } catch (err) {
     if (browser) await browser.close();
